@@ -20,7 +20,7 @@ from airtest.cli.parser import cli_setup
 from airtest.utils.transform import TargetPos
 from airtest.core.android.constant import TOUCH_METHOD, CAP_METHOD
 from poco.drivers.android.uiautomation import AndroidUiautomationPoco
-from airtest.core.api import auto_setup, device, Template, touch, find_all
+from airtest.core.api import auto_setup, device, Template, touch, find_all, connect_device
 
 from web_ui_helper.common.dir import get_project_path, get_logs_dir
 from web_ui_helper.common.log import logger, reset_airtest_loglevel
@@ -162,13 +162,18 @@ class Phone(object):
             if self.__port > 0:
                 adb_enable_remote_access(port=self.__port, timeout=5)
                 adb_reconnect_device(device_ip=self.__ip, timeout=5)
-            auto_setup(
-                project_root,
-                logdir=self.__enabled_log,
-                devices=[self.__get_connect_params()],
-                project_root=project_root,
-                compress=12
-            )
+                if self.__platform == ANDROID_PLATFORM:
+                    connect_device(self.__get_connect_params())
+                else:
+                    raise ValueError("暂时还不支持非android平台的手机初始化...")
+            else:
+                auto_setup(
+                    project_root,
+                    logdir=self.__enabled_log,
+                    devices=[self.__get_connect_params()],
+                    project_root=project_root,
+                    compress=12
+                )
 
     @runtime_exception
     def shell(self, cmd: str) -> str:
