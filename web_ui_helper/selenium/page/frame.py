@@ -10,6 +10,8 @@
 # ---------------------------------------------------------------------------------------------------------
 """
 from selenium import webdriver
+from web_ui_helper.common.log import logger
+from web_ui_helper.common.webdriver import Locator
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
 from web_ui_helper.decorators.selenium_exception import element_find_exception
@@ -25,14 +27,14 @@ class ListFrame(object):
         获取当前页面上已加载的索引数量
         """
         root_element = WebDriverWait(driver, timeout).until(
-            ec.presence_of_element_located((root_locator, root_regx))
+            ec.presence_of_element_located((Locator.get(root_locator), root_regx))
         )
-        current_indexes = root_element.find_elements(index_locator, index_regx)
+        current_indexes = root_element.find_elements(Locator.get(index_locator), index_regx)
         return len(current_indexes)
 
     @classmethod
     @element_find_exception
-    def __scroll_to_bottom(cls, driver):
+    def __scroll_to_bottom(cls, driver: webdriver):
         """
         模拟页面滚动到底部
         """
@@ -67,7 +69,7 @@ class ListFrame(object):
                 driver=driver, timeout=timeout, root_locator=root_locator,
                 root_regx=root_regx, index_locator=index_locator, index_regx=index_regx
             )
-            print(f"当前索引数量：{current_index_count}")
+            logger.warning(f"当前索引数量：{current_index_count}")
 
             # 如果想要限制爬取的最大索引数量，可以添加判断条件并在此跳出循环
             if current_index_count >= max_index_count:

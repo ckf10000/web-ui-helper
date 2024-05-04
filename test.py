@@ -9,7 +9,10 @@
 # Copyright ©2011-2024. Hunan xxxxxxx Company limited. All rights reserved.
 # ---------------------------------------------------------------------------------------------------------
 """
+from time import sleep
 from web_ui_helper.terminal.device import Phone
+from web_ui_helper.selenium.page.frame import ListFrame
+from web_ui_helper.selenium.frame.browser import SeleniumProxy
 
 
 def test_adb():
@@ -24,5 +27,16 @@ def test_adb():
     # ph.hide_keyword()
 
 
+def test_selenium_get_list():
+    sel = SeleniumProxy(browser_name="Chrome", is_headless=True, proxy_address="")
+    url = "https://flights.ctrip.com/online/list/oneway-foc-can?_=1&depdate=2024-05-15&sortByPrice=true"
+    ListFrame.parse_page(
+        driver=sel.browser, url=url, root_locator="class_name", root_regx="light-list", index_locator="xpath",
+        index_regx='.//div[@index]', timeout=3, max_index_count=100
+    )
+    sleep(30)
+
+
 if __name__ == '__main__':
-    test_adb()
+    # test_adb()
+    test_selenium_get_list()
