@@ -10,67 +10,42 @@
 # ---------------------------------------------------------------------------------------------------------
 """
 from selenium import webdriver
-from web_ui_helper.common.log import logger
 from web_ui_helper.common.webdriver import Locator
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as ec
-from web_ui_helper.decorators.selenium_exception import element_find_exception
+from web_ui_helper.selenium.frame.browser import SeleniumProxy
+from web_ui_helper.decorators.selenium_exception import element_find_exception, loop_find_element
 
 
 class ListFrame(object):
 
     @classmethod
-    @element_find_exception
-    def __get_current_indexes(cls, driver: webdriver, timeout: int, root_locator: str, root_regx: str,
-                              index_locator: str, index_regx: str) -> int:
-        """
-        获取当前页面上已加载的索引数量
-        """
-        root_element = WebDriverWait(driver, timeout).until(
-            ec.presence_of_element_located((Locator.get(root_locator), root_regx))
+    @loop_find_element
+    def get_elements(cls, driver: webdriver, locator: str, regx: str, timeout: int = 3, **kwargs) -> list[WebElement]:
+        return WebDriverWait(driver, timeout).until(
+            ec.presence_of_all_elements_located((Locator.get(locator), regx))
         )
-        current_indexes = root_element.find_elements(Locator.get(index_locator), index_regx)
-        return len(current_indexes)
 
     @classmethod
     @element_find_exception
-    def __scroll_to_bottom(cls, driver: webdriver):
-        """
-        模拟页面滚动到底部
-        """
-        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-
-    @classmethod
-    @element_find_exception
-    def parse_page(cls, driver: webdriver, url: str, root_locator: str, root_regx: str, index_locator: str,
-                   index_regx: str, timeout: int = 1, max_index_count: int = 20) -> None:
+    def parse_page(cls, driver: webdriver, url: str, locator: str, regx: str, timeout: int = 1) -> dict:
         """
         爬取页面的主函数
         """
         # 打开网页
         driver.get(url)
-        # 获取初始的索引数量
-        current_index_count = cls.__get_current_indexes(
-            driver=driver, timeout=timeout, root_locator=root_locator,
-            root_regx=root_regx, index_locator=index_locator, index_regx=index_regx
-        )
-        while True:
-            # 模拟滚动到页面底部
-            cls.__scroll_to_bottom(driver=driver)
-            # 等待新索引加载
-            WebDriverWait(driver, timeout).until(
-                lambda d: cls.__get_current_indexes(
-                    driver=driver, timeout=timeout, root_locator=root_locator, root_regx=root_regx,
-                    index_locator=index_locator, index_regx=index_regx
-                ) > current_index_count
-            )
-            # 更新当前索引数量
-            current_index_count = cls.__get_current_indexes(
-                driver=driver, timeout=timeout, root_locator=root_locator,
-                root_regx=root_regx, index_locator=index_locator, index_regx=index_regx
-            )
-            logger.warning(f"当前索引数量：{current_index_count}")
-
-            # 如果想要限制爬取的最大索引数量，可以添加判断条件并在此跳出循环
-            if current_index_count >= max_index_count:
-                break
+        flag = True
+        parsed_data = dict()
+        while flag:
+            SeleniumProxy.scroll_to_bottom(driver=driver)
+            elements = cls.get_elements(driver=driver, locator=locator, regx=regx, timeout=timeout, loop=60)
+            new_elements = {element.get_attribute("index"): element for element in elements if
+                            element.get_attribute("index") not in list(parsed_data.keys())}
+            if new_elements:
+                parsed_data.update(new_elements)
+            else:
+                flag = False
+        from pprint import pprint
+        pprint(parsed_data)
+        return parsed_data

@@ -11,7 +11,7 @@
 """
 import typing as t
 from functools import wraps
-from selenium.common.exceptions import NoSuchElementException, TimeoutException, ElementNotInteractableException
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from web_ui_helper.common.log import logger
 
 
@@ -68,5 +68,38 @@ def element_find_exception(func: t.Callable):
                 logger.error(e)
             if is_ignore is False:
                 raise OverflowError("Element found failed, reason: {}".format(e))
+
+    return wrapper
+
+
+def loop_find_element(func: t.Callable):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        loop = kwargs.pop('loop', 3)
+        is_ignore = kwargs.pop('is_ignore', True)
+        is_log_output = kwargs.pop('is_log_output', True)
+        result = None
+        for i in range(loop):
+            try:
+                result = func(*args, **kwargs)
+                if result:
+                    break
+            except (NoSuchElementException,):
+                if is_log_output is True:
+                    logger.error("Element Not Found")
+                if is_ignore is False:
+                    raise NoSuchElementException()
+            except (TimeoutException,):
+                if is_log_output is True:
+                    logger.error("Element found timeout")
+                if is_ignore is False:
+                    raise TimeoutException()
+            except Exception as e:
+                if is_log_output is True:
+                    logger.error(e)
+                if is_ignore is False:
+                    raise OverflowError("Element found failed, reason: {}".format(e))
+
+        return result
 
     return wrapper

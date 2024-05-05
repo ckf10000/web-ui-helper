@@ -17,6 +17,7 @@ import requests
 import selenium
 from PIL import Image
 from io import BytesIO
+from selenium import webdriver
 from abc import abstractmethod
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.keys import Keys
@@ -24,7 +25,6 @@ from seleniumwire import webdriver as driver_wire
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.common.exceptions import NoSuchElementException
 # expected_conditions 类负责条件
@@ -38,6 +38,7 @@ from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from web_ui_helper.common.log import logger
 from web_ui_helper.common.webdriver import Locator
 from web_ui_helper.common.date_extend import get_current_datetime_int_str
+from web_ui_helper.decorators.selenium_exception import element_find_exception
 from web_ui_helper.common.dir import get_project_path, get_chrome_default_user_data_path, get_var_path, is_file, \
     get_browser_bin_exe, create_directory, move_file, is_dir, get_browser_process_name, is_process_running
 
@@ -115,11 +116,12 @@ class ChromeBrowser(Browser):
         if self.is_headless is True:
             # 谷歌浏览器后台运行模式
             chrome_options.add_argument('--headless')
-        # chrome_options.add_argument('--disable-dev-shm-usage')
-        # 指定浏览器分辨率
-        # chrome_options.add_argument('window-size=1920x1080')
-        # 浏览器最大化
-        chrome_options.add_argument('--start-maximized')
+            # 指定浏览器分辨率
+            chrome_options.add_argument('--window-size=1920,1080')
+        else:
+            # 浏览器最大化
+            chrome_options.add_argument('--start-maximized')
+        chrome_options.add_argument('--disable-dev-shm-usage')
         # 或者使用下面的设置, 提升速度
         # chrome_options.add_argument('blink-settings=imagesEnabled=false')
         # 隐藏滚动条, 应对一些特殊页面
@@ -567,13 +569,13 @@ class SeleniumProxy(object):
         self.browser.refresh()
 
     @classmethod
-    def drag_scroll(cls, driver: WebDriver) -> bool:
-        flag = False
-        try:
-            # 使用 execute_script 方法执行 JavaScript 代码，实现页面滚动
-            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-            flag = True
-        except Exception as e:
-            err_str = "通过执行JavaScript脚本来实现拖动滚动条失败，error: {}".format(e)
-            logger.error(err_str)
-        return flag
+    @element_find_exception
+    def scroll_to_bottom(cls, driver: webdriver) -> None:
+        """模拟页面滚动到底部"""
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+
+    @classmethod
+    @element_find_exception
+    def get_outer_html(cls, driver: webdriver, element: WebElement) -> str:
+        # 使用 JavaScript 获取元素的 outerHTML
+        return driver.execute_script("return arguments[0].outerHTML;", element)

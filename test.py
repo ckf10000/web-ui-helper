@@ -30,11 +30,12 @@ def test_adb():
 def test_selenium_get_list():
     sel = SeleniumProxy(browser_name="Chrome", is_headless=True, proxy_address="")
     url = "https://flights.ctrip.com/online/list/oneway-foc-can?_=1&depdate=2024-05-15&sortByPrice=true"
-    ListFrame.parse_page(
-        driver=sel.browser, url=url, root_locator="class_name", root_regx="light-list", index_locator="xpath",
-        index_regx='.//div[@index]', timeout=3, max_index_count=100
-    )
-    sleep(30)
+    # ListFrame.parse_page(
+    #     driver=sel.browser, url=url, root_locator="class_name", root_regx="light-list", index_locator="xpath",
+    #     index_regx='.//div[@index]', timeout=3, max_index_count=100
+    # )
+    ListFrame.parse_page(driver=sel.browser, url=url, locator="xpath", regx="//div[@index]", timeout=3)
+    # sleep(30)
 
 
 if __name__ == '__main__':
