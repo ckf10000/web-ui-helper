@@ -9,9 +9,8 @@
 # Copyright ©2011-2024. Hunan xxxxxxx Company limited. All rights reserved.
 # ---------------------------------------------------------------------------------------------------------
 """
-from time import sleep
 from web_ui_helper.terminal.device import Phone
-from web_ui_helper.selenium.page.frame import ListFrame
+from web_ui_helper.selenium.ui.frame import ListFrame
 from web_ui_helper.selenium.frame.browser import SeleniumProxy
 
 
