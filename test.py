@@ -29,7 +29,7 @@ def test_adb():
 
 def test_selenium_get_list():
     sel = SeleniumProxy(browser_name="Chrome", is_headless=True, proxy_address="")
-    url = "https://flights.ctrip.com/online/list/oneway-foc-can?_=1&depdate=2024-05-15&sortByPrice=true"
+    url = " https://flights.ctrip.com/online/list/oneway-SHE-CSX?_=1&depdate=2024-05-08&sortByPrice=true"
     elements_data = ListFrame.get_all_elements(
         driver=sel.browser, url=url, locator="xpath", list_key="index", regx="//div[@index]", timeout=3
     )

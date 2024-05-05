@@ -54,10 +54,12 @@ class DesktopFlight:
         for index, element in elements_data.items():
             element = driver.find_element(Locator.get("xpath"), index_regx.format(index))
             # print(element.get_attribute('outerHTML'))
-            price = get_sub_element(element=element, locator="xpath", regx=price_regx, interval=1, loop=3).text.strip()
-            airline = get_sub_element(
+            price_element = get_sub_element(element=element, locator="xpath", regx=price_regx, interval=1, loop=3)
+            price = price_element.text.strip() if price_element else ""
+            airline_element = get_sub_element(
                 element=element, locator="xpath", regx=airline_regx, interval=1, loop=3
-            ).text.strip()
+            )
+            airline = airline_element.text.strip() if airline_element else ""
             plane_no = get_sub_element(element=element, locator="xpath", regx=plane_no_regx_1, interval=1, loop=3)
             if plane_no:
                 plane_no_slice = plane_no.text.strip().split()
@@ -67,22 +69,27 @@ class DesktopFlight:
                 plane_no = element.find_element(Locator.get("xpath"), plane_no_regx_2)
                 plane_no = plane_no.get_attribute('id').split("_")[0].split("-")[1].strip()
                 plane_type = ""
-            depart_time = get_sub_element(
+            depart_time_element = get_sub_element(
                 element=element, locator="xpath", regx=depart_time_regx, interval=1, loop=3
-            ).text.strip()
-            arrive_time_slice = get_sub_element(
+            )
+            depart_time = depart_time_element.text.strip() if depart_time_element else ""
+            arrive_time_element = get_sub_element(
                 element=element, locator="xpath", regx=arrive_time_regx, interval=1, loop=3
-            ).text.strip().split("\n")
-            depart_airport = get_sub_element(
+            )
+            arrive_time_slice = arrive_time_element.text.strip().split("\n") if arrive_time_element else list()
+            depart_airport_element = get_sub_element(
                 element=element, locator="xpath", regx=depart_airport_regx, interval=1, loop=3
-            ).text.strip()
-            arrive_airport = get_sub_element(
+            )
+            depart_airport = depart_airport_element.text.strip() if depart_airport_element else ""
+            arrive_airport_element = get_sub_element(
                 element=element, locator="xpath", regx=arrive_airport_regx, interval=1, loop=3
-            ).text.strip()
+            )
+            arrive_airport = arrive_airport_element.text.strip() if arrive_airport_element else ""
             # 逐行添加数据
             new_row = dict(
                 index=index, airline=airline, plane_no=plane_no, plane_type=plane_type,
-                arrive_time=arrive_time_slice[0], cross_days=arrive_time_slice[1] if len(arrive_time_slice) > 1 else "",
+                arrive_time=arrive_time_slice[0] if len(arrive_time_slice) > 0 else "",
+                cross_days=arrive_time_slice[1] if len(arrive_time_slice) > 1 else "",
                 depart_time=depart_time, price=Decimal(price[1:]), price_uint=price[:1], depart_airport=depart_airport,
                 arrive_airport=arrive_airport
             )
