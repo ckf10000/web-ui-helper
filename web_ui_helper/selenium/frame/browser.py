@@ -261,16 +261,16 @@ class SeleniumProxy(object):
         else:
             raise ValueError("Browser name must be Chrome or Firefox.")
 
-    def input_text(self, selector: str, regx: str, value: str) -> bool:
+    def input_text(self, locator: str, regx: str, value: str) -> bool:
         """
-        selector 选择器
+        locator 选择器
         regx 选择器所要匹配的表达式
         value 文本框输入值
         """
         flag = False
         try:
             input_1 = self.wait.until(
-                ec.presence_of_element_located((Locator.get(selector), regx))
+                ec.presence_of_element_located((Locator.get(locator), regx))
             )
             # 模拟键盘操作清空输入框内容
             input_1.send_keys(Keys.CONTROL + "a")  # 选中输入框中的所有内容
@@ -284,34 +284,33 @@ class SeleniumProxy(object):
             input_1.send_keys('{}'.format(value))
             flag = True
         except Exception as e:
-            err_str = "通过选择器：{}，表达式: {}，捕获输入框设置文本<{}>失败，error：{}".format(selector, regx, value, e)
+            err_str = "通过选择器：{}，表达式: {}，捕获输入框设置文本<{}>失败，error：{}".format(locator, regx, value, e)
             logger.error(err_str)
         return flag
 
-    def submit_click(self, selector: str, regx: str) -> bool:
+    def submit_click(self, locator: str, regx: str) -> bool:
         """
-        selector 选择器
+        locator 选择器
         regx 选择器所要匹配的表达式
         value 文本框输入值
         """
         flag = False
         try:
             submit = self.wait.until(
-                ec.element_to_be_clickable((Locator.get(selector), regx))
+                ec.element_to_be_clickable((Locator.get(locator), regx))
             )
             submit.click()
             flag = True
         except Exception as e:
-            err_str = "通过选择器：{}，表达式: {}，捕获点击对象并点击失败，error：{}".format(selector, regx, e)
+            err_str = "通过选择器：{}，表达式: {}，捕获点击对象并点击失败，error：{}".format(locator, regx, e)
             logger.error(err_str)
         return flag
 
-    def get_code(self, selector: str, regx: str) -> str:
+    def get_code(self, locator: str, regx: str) -> str:
         logger.warning("开始获取验证码...")
         ocr_result = None
         try:
-            selector = Locator.get(selector)
-            captcha = self.browser.find_element(Locator.get(selector), regx)
+            captcha = self.browser.find_element(Locator.get(locator), regx)
             code_image = Image.open(BytesIO(captcha.screenshot_as_png))
             # 1.初始化一个实例，配置识别模式默认为OCR识别
             ocr = ddddocr.DdddOcr(show_ad=False)
@@ -319,7 +318,7 @@ class SeleniumProxy(object):
             logger.warning("识别到的验证码为：", ocr_result)
             return ocr_result
         except Exception as e:
-            err_str = "通过选择器：{}，表达式: {}，识别验证码失败，error：{}".format(selector, regx, e)
+            err_str = "通过选择器：{}，表达式: {}，识别验证码失败，error：{}".format(locator, regx, e)
             logger.error(err_str)
         return ocr_result
 
@@ -334,56 +333,56 @@ class SeleniumProxy(object):
             logger.warning("未出现弹框，无需处理。")
         return True
 
-    def get_element_text(self, selector: str, regx: str) -> str:
+    def get_element_text(self, locator: str, regx: str) -> str:
         element_text = None
         try:
             # 根据实际情况定位按钮元素
-            element = self.browser.find_element(Locator.get(selector), regx)
+            element = self.browser.find_element(Locator.get(locator), regx)
             # 获取按钮元素的文本信息
             element_text = element.text.strip() if isinstance(element.text, str) else ""
             logger.warning("获取元素的文字信息为: {}".format(element_text))
             return element_text
         except Exception as e:
-            err_str = "通过选择器：{}，表达式: {}，获取元素文本信息失败，error：{}".format(selector, regx, e)
+            err_str = "通过选择器：{}，表达式: {}，获取元素文本信息失败，error：{}".format(locator, regx, e)
             logger.error(err_str)
         return element_text
 
-    def get_element(self, selector: str, regx: str) -> WebElement:
+    def get_element(self, locator: str, regx: str) -> WebElement:
         element = None
         try:
             # 根据实际情况定位按钮元素
-            element = self.browser.find_element(Locator.get(selector), regx)
+            element = self.browser.find_element(Locator.get(locator), regx)
         except (NoSuchElementException,):
-            err_str = "通过选择器：{}，表达式: {}，没有找到对应的元素".format(selector, regx)
+            err_str = "通过选择器：{}，表达式: {}，没有找到对应的元素".format(locator, regx)
             logger.warning(err_str)
         except Exception as e:
-            err_str = "通过选择器：{}，表达式: {}，获取元素失败，error：{}".format(selector, regx, e)
+            err_str = "通过选择器：{}，表达式: {}，获取元素失败，error：{}".format(locator, regx, e)
             logger.error(err_str)
         return element
 
-    def get_elements(self, selector: str, regx: str) -> [WebElement]:
+    def get_elements(self, locator: str, regx: str) -> [WebElement]:
         elements = list()
         try:
             # 根据实际情况定位按钮元素
-            elements = self.browser.find_elements(Locator.get(selector), regx)
+            elements = self.browser.find_elements(Locator.get(locator), regx)
         except (NoSuchElementException,):
-            err_str = "通过选择器：{}，表达式: {}，没有找到对应的元素".format(selector, regx)
+            err_str = "通过选择器：{}，表达式: {}，没有找到对应的元素".format(locator, regx)
             logger.warning(err_str)
         except Exception as e:
-            err_str = "通过选择器：{}，表达式: {}，获取元素失败，error：{}".format(selector, regx, e)
+            err_str = "通过选择器：{}，表达式: {}，获取元素失败，error：{}".format(locator, regx, e)
             logger.error(err_str)
         return elements
 
-    def get_background_color(self, selector: str, regx: str) -> str:
+    def get_background_color(self, locator: str, regx: str) -> str:
         background_color = None
         try:
             # 根据实际情况定位按钮元素
-            element = self.browser.find_element(Locator.get(selector), regx)
+            element = self.browser.find_element(Locator.get(locator), regx)
             # 获取选项的背景颜色
             background_color = element.value_of_css_property("background-color")
             background_color = background_color.strip() if isinstance(background_color, str) else ""
         except Exception as e:
-            err_str = "通过选择器：{}，表达式: {}，获取背景颜色失败，error：{}".format(selector, regx, e)
+            err_str = "通过选择器：{}，表达式: {}，获取背景颜色失败，error：{}".format(locator, regx, e)
             logger.error(err_str)
         return background_color
 
