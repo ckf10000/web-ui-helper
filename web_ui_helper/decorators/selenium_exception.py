@@ -9,6 +9,7 @@
 # Copyright ©2011-2024. Hunan xxxxxxx Company limited. All rights reserved.
 # ---------------------------------------------------------------------------------------------------------
 """
+import time
 import typing as t
 from functools import wraps
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
@@ -76,6 +77,7 @@ def loop_find_element(func: t.Callable):
     @wraps(func)
     def wrapper(*args, **kwargs):
         loop = kwargs.pop('loop', 3)
+        interval = kwargs.pop('interval', 0)
         is_ignore = kwargs.pop('is_ignore', True)
         is_log_output = kwargs.pop('is_log_output', True)
         result = None
@@ -99,7 +101,8 @@ def loop_find_element(func: t.Callable):
                     logger.error(e)
                 if is_ignore is False:
                     raise OverflowError("Element found failed, reason: {}".format(e))
-
+            if interval > 0:
+                time.sleep(interval)
         return result
 
     return wrapper

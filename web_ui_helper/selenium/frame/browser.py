@@ -38,7 +38,7 @@ from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from web_ui_helper.common.log import logger
 from web_ui_helper.common.webdriver import Locator
 from web_ui_helper.common.date_extend import get_current_datetime_int_str
-from web_ui_helper.decorators.selenium_exception import element_find_exception
+from web_ui_helper.decorators.selenium_exception import element_find_exception, loop_find_element
 from web_ui_helper.common.dir import get_project_path, get_chrome_default_user_data_path, get_var_path, is_file, \
     get_browser_bin_exe, create_directory, move_file, is_dir, get_browser_process_name, is_process_running
 
@@ -568,14 +568,28 @@ class SeleniumProxy(object):
         # 刷新当前页面
         self.browser.refresh()
 
-    @classmethod
-    @element_find_exception
-    def scroll_to_bottom(cls, driver: webdriver) -> None:
-        """模拟页面滚动到底部"""
-        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 
-    @classmethod
-    @element_find_exception
-    def get_outer_html(cls, driver: webdriver, element: WebElement) -> str:
-        # 使用 JavaScript 获取元素的 outerHTML
-        return driver.execute_script("return arguments[0].outerHTML;", element)
+@element_find_exception
+def scroll_to_bottom(driver: webdriver) -> None:
+    """模拟页面滚动到底部"""
+    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+
+
+@element_find_exception
+def get_outer_html(driver: webdriver, element: WebElement) -> str:
+    # 使用 JavaScript 获取元素的 outerHTML
+    return driver.execute_script("return arguments[0].outerHTML;", element)
+
+
+@loop_find_element
+def get_elements(driver: webdriver, locator: str, regx: str, timeout: int = 3, **kwargs) -> list[WebElement]:
+    kwargs.clear()
+    return WebDriverWait(driver, timeout).until(
+        ec.presence_of_all_elements_located((Locator.get(locator), regx))
+    )
+
+
+@loop_find_element
+def get_sub_element(element: WebElement, locator: str, regx: str, **kwargs) -> WebElement:
+    kwargs.clear()
+    return element.find_element(Locator.get(locator), regx)

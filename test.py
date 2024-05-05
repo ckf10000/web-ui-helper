@@ -12,6 +12,7 @@
 from web_ui_helper.terminal.device import Phone
 from web_ui_helper.selenium.ui.frame import ListFrame
 from web_ui_helper.selenium.frame.browser import SeleniumProxy
+from web_ui_helper.selenium.parse.ctrip_flight import DesktopFlight
 
 
 def test_adb():
@@ -29,12 +30,10 @@ def test_adb():
 def test_selenium_get_list():
     sel = SeleniumProxy(browser_name="Chrome", is_headless=True, proxy_address="")
     url = "https://flights.ctrip.com/online/list/oneway-foc-can?_=1&depdate=2024-05-15&sortByPrice=true"
-    results = ListFrame.get_all_elements(
+    elements_data = ListFrame.get_all_elements(
         driver=sel.browser, url=url, locator="xpath", list_key="index", regx="//div[@index]", timeout=3
     )
-    for index, element in results.items():
-        print(index)
-        print(SeleniumProxy.get_outer_html(sel.browser, element=element))
+    DesktopFlight.parse_data(driver=sel.browser, elements_data=elements_data)
 
 
 if __name__ == '__main__':

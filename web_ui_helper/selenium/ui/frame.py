@@ -9,26 +9,14 @@
 # Copyright ©2011-2024. Hunan xxxxxxx Company limited. All rights reserved.
 # ---------------------------------------------------------------------------------------------------------
 """
+import time
+
 from selenium import webdriver
-from web_ui_helper.common.webdriver import Locator
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.remote.webelement import WebElement
-from selenium.webdriver.support import expected_conditions as ec
-from web_ui_helper.selenium.frame.browser import SeleniumProxy
-from web_ui_helper.decorators.selenium_exception import element_find_exception, loop_find_element
+from web_ui_helper.decorators.selenium_exception import element_find_exception
+from web_ui_helper.selenium.frame.browser import scroll_to_bottom, get_elements
 
 
 class ListFrame(object):
-
-    @classmethod
-    @loop_find_element
-    def get_current_elements(
-            cls, driver: webdriver, locator: str, regx: str, timeout: int = 3, **kwargs
-    ) -> list[WebElement]:
-        kwargs.clear()
-        return WebDriverWait(driver, timeout).until(
-            ec.presence_of_all_elements_located((Locator.get(locator), regx))
-        )
 
     @classmethod
     @element_find_exception
@@ -40,11 +28,12 @@ class ListFrame(object):
         """
         # 打开网页
         driver.get(url)
+        time.sleep(5)
         flag = True
         parsed_data = dict()
         while flag:
-            SeleniumProxy.scroll_to_bottom(driver=driver)
-            elements = cls.get_current_elements(driver=driver, locator=locator, regx=regx, timeout=timeout, loop=60)
+            scroll_to_bottom(driver=driver)
+            elements = get_elements(driver=driver, locator=locator, regx=regx, timeout=timeout, loop=60)
             new_elements = {element.get_attribute(list_key): element for element in elements if
                             element.get_attribute(list_key) not in list(parsed_data.keys())}
             if new_elements:
