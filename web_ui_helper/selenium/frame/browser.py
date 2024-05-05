@@ -564,7 +564,7 @@ class SeleniumProxy(object):
         return cookies or ''
 
     def get_cookies(self) -> list:
-        return self.browser.get_cookies() or list
+        return self.browser.get_cookies() or list()
 
     def refresh(self) -> None:
         # 刷新当前页面
