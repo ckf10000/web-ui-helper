@@ -22,14 +22,19 @@ class ListFrame(object):
 
     @classmethod
     @loop_find_element
-    def get_elements(cls, driver: webdriver, locator: str, regx: str, timeout: int = 3, **kwargs) -> list[WebElement]:
+    def get_current_elements(
+            cls, driver: webdriver, locator: str, regx: str, timeout: int = 3, **kwargs
+    ) -> list[WebElement]:
+        kwargs.clear()
         return WebDriverWait(driver, timeout).until(
             ec.presence_of_all_elements_located((Locator.get(locator), regx))
         )
 
     @classmethod
     @element_find_exception
-    def parse_page(cls, driver: webdriver, url: str, locator: str, regx: str, timeout: int = 1) -> dict:
+    def get_all_elements(
+            cls, driver: webdriver, url: str, locator: str, regx: str, list_key: str, timeout: int = 1
+    ) -> dict:
         """
         爬取页面的主函数
         """
@@ -39,9 +44,9 @@ class ListFrame(object):
         parsed_data = dict()
         while flag:
             SeleniumProxy.scroll_to_bottom(driver=driver)
-            elements = cls.get_elements(driver=driver, locator=locator, regx=regx, timeout=timeout, loop=60)
-            new_elements = {element.get_attribute("index"): element for element in elements if
-                            element.get_attribute("index") not in list(parsed_data.keys())}
+            elements = cls.get_current_elements(driver=driver, locator=locator, regx=regx, timeout=timeout, loop=60)
+            new_elements = {element.get_attribute(list_key): element for element in elements if
+                            element.get_attribute(list_key) not in list(parsed_data.keys())}
             if new_elements:
                 parsed_data.update(new_elements)
             else:
