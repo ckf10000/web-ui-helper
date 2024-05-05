@@ -9,6 +9,8 @@
 # Copyright ©2011-2024. Hunan xxxxxxx Company limited. All rights reserved.
 # ---------------------------------------------------------------------------------------------------------
 """
+import time
+
 from web_ui_helper.terminal.device import Phone
 from web_ui_helper.selenium.ui.frame import ListFrame
 from web_ui_helper.selenium.frame.browser import SeleniumProxy
@@ -38,6 +40,17 @@ def test_selenium_get_list():
     print(df.to_string(justify='left', index=False))
 
 
+def test_selenium_get_cookie():
+    sel = SeleniumProxy(browser_name="Chrome", is_headless=True, proxy_address="")
+    url = " https://www.ctrip.com"
+    sel.get(url=url)
+    time.sleep(5)
+    from pprint import pprint
+    pprint(sel.get_cookies())
+    pprint(sel.get_session())
+
+
 if __name__ == '__main__':
     # test_adb()
-    test_selenium_get_list()
+    # test_selenium_get_list()
+    test_selenium_get_cookie()
