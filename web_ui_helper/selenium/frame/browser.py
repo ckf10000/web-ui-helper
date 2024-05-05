@@ -592,3 +592,8 @@ def get_elements(driver: webdriver, locator: str, regx: str, timeout: int = 3, *
 def get_sub_element(element: WebElement, locator: str, regx: str, **kwargs) -> WebElement:
     kwargs.clear()
     return element.find_element(Locator.get(locator), regx)
+
+
+def js_click(driver: webdriver, element: WebElement):
+    # 使用 JavaScript 点击操作
+    driver.execute_script("arguments[0].click();", element)
