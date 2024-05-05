@@ -21,7 +21,15 @@ setup(
     url='https://github.com/ckf10000/web-ui-helper',
     packages=find_packages(),
     install_requires=[
-        'selenium>=4.20.0'
+        'selenium>=4.20.0',
+        'pandas>=2.2.2',
+        'blinker>=1.7.0',
+        'airtest>=1.3.3',
+        'pocoui>=1.0.94',
+        'requests>=2.31.0',
+        'selenium-wire>=5.1.0',
+        'webdriver-manager>=4.0.1',
+        'ddddocr>=1.4.11'
     ],
     classifiers=[
         'Programming Language :: Python :: 3',
