@@ -88,6 +88,4 @@ class DesktopFlight:
             )
             # 添加新行数据
             df.loc[len(df)] = new_row
-        # 打印DataFrame
-        print(df.to_string(justify='left', index=False))
         return df

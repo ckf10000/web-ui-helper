@@ -33,7 +33,9 @@ def test_selenium_get_list():
     elements_data = ListFrame.get_all_elements(
         driver=sel.browser, url=url, locator="xpath", list_key="index", regx="//div[@index]", timeout=3
     )
-    DesktopFlight.parse_data(driver=sel.browser, elements_data=elements_data)
+    df = DesktopFlight.parse_data(driver=sel.browser, elements_data=elements_data)
+    # 打印DataFrame
+    print(df.to_string(justify='left', index=False))
 
 
 if __name__ == '__main__':
