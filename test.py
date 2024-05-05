@@ -48,6 +48,7 @@ def test_selenium_get_cookie():
     from pprint import pprint
     pprint(sel.get_cookies())
     pprint(sel.get_session())
+    pprint(sel.get_cookie(name="cticket"))
 
 
 if __name__ == '__main__':

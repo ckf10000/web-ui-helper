@@ -566,6 +566,19 @@ class SeleniumProxy(object):
     def get_cookies(self) -> list:
         return self.browser.get_cookies() or list()
 
+    def get_cookie(self, name: str) -> dict:
+        """
+        {'domain': '.ctrip.com',
+         'expiry': 1717525670,
+         'httpOnly': True,
+         'name': 'cticket',
+         'path': '/',
+         'sameSite': 'None',
+         'secure': True,
+         'value': '275F2106E6E6CAAA34E1A32FE2452F42450E99443E2B22A31360D38C0BB2DEB3'}
+        """
+        return self.browser.get_cookie(name=name) or dict()
+
     def refresh(self) -> None:
         # 刷新当前页面
         self.browser.refresh()
