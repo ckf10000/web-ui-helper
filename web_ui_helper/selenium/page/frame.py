@@ -46,6 +46,4 @@ class ListFrame(object):
                 parsed_data.update(new_elements)
             else:
                 flag = False
-        from pprint import pprint
-        pprint(parsed_data)
         return parsed_data
