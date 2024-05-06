@@ -617,6 +617,12 @@ def js_click(driver: webdriver, element: WebElement, **kwargs):
     driver.execute_script("arguments[0].click();", element)
 
 
+def scroll_element(driver: webdriver, element: WebElement, **kwargs):
+    return execute_script_with_element(
+        driver=driver, js_str="arguments[0].scrollIntoView(true);", element=element, **kwargs
+    )
+
+
 @loop_find_element
 def execute_script(driver: webdriver, js_str: str, **kwargs):
     kwargs.clear()
