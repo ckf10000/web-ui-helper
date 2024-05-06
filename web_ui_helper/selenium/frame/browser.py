@@ -610,6 +610,20 @@ def get_sub_element(element: WebElement, locator: str, regx: str, **kwargs) -> W
     return element.find_element(Locator.get(locator), regx)
 
 
-def js_click(driver: webdriver, element: WebElement):
+@loop_find_element
+def js_click(driver: webdriver, element: WebElement, **kwargs):
+    kwargs.clear()
     # 使用 JavaScript 点击操作
     driver.execute_script("arguments[0].click();", element)
+
+
+@loop_find_element
+def execute_script(driver: webdriver, js_str: str, **kwargs):
+    kwargs.clear()
+    return driver.execute_script(js_str)
+
+
+@loop_find_element
+def execute_script_with_element(driver: webdriver, js_str: str, element: WebElement, **kwargs):
+    kwargs.clear()
+    return driver.execute_script(js_str, element)
