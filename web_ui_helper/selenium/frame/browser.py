@@ -629,7 +629,7 @@ def execute_script_with_element(driver: webdriver, js_str: str, element: WebElem
     return driver.execute_script(js_str, element)
 
 
+@loop_find_element
 def scroll_element(driver: webdriver, element: WebElement, **kwargs):
-    return execute_script_with_element(
-        driver=driver, js_str="arguments[0].scrollIntoView(true);", element=element, **kwargs
-    )
+    kwargs.clear()
+    return driver.execute_script("arguments[0].scrollIntoView(true);", element)
