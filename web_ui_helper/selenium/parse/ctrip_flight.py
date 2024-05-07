@@ -40,8 +40,8 @@ class DesktopFlight:
         index_regx = './/div[@index="{}"]'
         price_regx = './/span[@class="price"]'
         airline_regx = './/div[@class="flight-airline"]/div[@class="airline-name"]'
-        plane_no_regx_1 = './/div[@class="plane"]/div[@class="plane"]/span'
-        plane_no_regx_2 = './/div[@class="flight-airline"]/div[@class="plane"]'
+        plane_no_regx_1 = './/div[@class="flight-airline"]/div[@class="plane"]'
+        plane_no_regx_2 = './/div[@class="flight-airline"]'
         depart_time_regx = './/div[@class="depart-box"]/div[@class="time"]'
         depart_airport_regx = './/div[@class="depart-box"]/div[@class="airport"]/span'
         arrive_time_regx = './/div[@class="arrive-box"]/div[@class="time"]'
@@ -60,14 +60,21 @@ class DesktopFlight:
                 element=element, locator="xpath", regx=airline_regx, interval=1, loop=3
             )
             airline = airline_element.text.strip() if airline_element else ""
-            plane_no = get_sub_element(element=element, locator="xpath", regx=plane_no_regx_1, interval=1, loop=3)
-            if plane_no:
-                plane_no_slice = plane_no.text.strip().split()
+            plane_no_element = get_sub_element(
+                element=element, locator="xpath", regx=plane_no_regx_1, interval=1, loop=3
+            )
+            if plane_no_element and plane_no_element.text:
+                plane_no_slice = plane_no_element.text.strip().split()
                 plane_no = plane_no_slice[0].strip()
                 plane_type = plane_no_slice[1].strip()
             else:
-                plane_no = element.find_element(Locator.get("xpath"), plane_no_regx_2)
-                plane_no = plane_no.get_attribute('id').split("_")[0].split("-")[1].strip()
+                plane_no_element = get_sub_element(
+                    element=element, locator="xpath", regx=plane_no_regx_2, interval=1, loop=3
+                )
+                if plane_no_element.get_attribute('id'):
+                    plane_no = plane_no_element.get_attribute('id').split("_")[0].split("-")[1].strip()
+                else:
+                    plane_no = ""
                 plane_type = ""
             depart_time_element = get_sub_element(
                 element=element, locator="xpath", regx=depart_time_regx, interval=1, loop=3

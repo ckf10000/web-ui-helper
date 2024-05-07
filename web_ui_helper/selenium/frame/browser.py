@@ -107,6 +107,8 @@ class ChromeBrowser(Browser):
         # chrome_options.add_argument('--incognito')
         # 隐藏"Chrome正在受到自动软件的控制"
         chrome_options.add_argument('disable-infobars')
+        # 禁用 WebRTC
+        chrome_options.add_argument("--disable-webrtc")
         chrome_options.add_argument('--user-data-dir={}'.format(self.USERDATA_PATH))
         # chrome_options.add_argument("--disable-autofill-passwords")  # 禁用自动填充密码
         # chrome_options.add_argument("--disable-save-password-bubble")  # 禁用保存密码提示框
