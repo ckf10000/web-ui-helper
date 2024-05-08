@@ -112,6 +112,9 @@ class ChromeBrowser(Browser):
         chrome_options.add_argument('--user-data-dir={}'.format(self.USERDATA_PATH))
         # chrome_options.add_argument("--disable-autofill-passwords")  # 禁用自动填充密码
         # chrome_options.add_argument("--disable-save-password-bubble")  # 禁用保存密码提示框
+        # 在 ChromeOptions 中禁用缓存
+        # chrome_options.add_argument("--disable-cache")
+        # chrome_options.add_argument("--disk-cache-size=0")
         # 设置中文
         # chrome_options.add_argument('lang=zh_CN.UTF-8')
         # chrome_options.add_argument('--no-sandbox')  # linux下
@@ -238,7 +241,7 @@ class FirefoxBrowser(Browser):
 class SeleniumProxy(object):
 
     def __init__(self, browser_name: str, proxy_address: str, browser_path: str = None,
-                 is_headless: bool = False) -> None:
+                 is_headless: bool = False, is_single_instance: bool = True) -> None:
         if browser_path:
             if not is_file(browser_path):
                 raise ValueError("browser path is not exist")
@@ -251,14 +254,18 @@ class SeleniumProxy(object):
         if browser_name == "Chrome":
             self.browser_proxy = ChromeBrowser(browser_path=exe_file, is_headless=is_headless,
                                                proxy_address=proxy_address)
-            if self.browser_proxy.is_running() is True:
-                raise ValueError("Chrome browser is already running.")
+            # 单实例模式下，系统只能有一个chrome浏览器进程在运行中
+            if is_single_instance is True:
+                if self.browser_proxy.is_running() is True:
+                    raise ValueError("Chrome browser is already running.")
             self.browser, self.wait, self.browser_name = self.browser_proxy.get_browser()
         elif browser_name == "Firefox":
             self.browser_proxy = FirefoxBrowser(browser_path=exe_file, is_headless=is_headless,
                                                 proxy_address=proxy_address)
-            if self.browser_proxy.is_running() is True:
-                raise ValueError("Firefox browser is already running.")
+            # 单实例模式下，系统只能有一个firefox浏览器进程在运行中
+            if is_single_instance is True:
+                if self.browser_proxy.is_running() is True:
+                    raise ValueError("Firefox browser is already running.")
             self.browser, self.wait, self.browser_name = self.browser_proxy.get_browser()
         else:
             raise ValueError("Browser name must be Chrome or Firefox.")
