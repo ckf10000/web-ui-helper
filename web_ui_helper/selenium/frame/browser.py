@@ -21,6 +21,7 @@ from selenium import webdriver
 from abc import abstractmethod
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import Select
 from seleniumwire import webdriver as driver_wire
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
@@ -577,20 +578,48 @@ class SeleniumProxy(object):
 
     def get_cookie(self, name: str) -> dict:
         """
-        {'domain': '.ctrip.com',
+        {
+        'domain': '.ctrip.com',
          'expiry': 1717525670,
          'httpOnly': True,
          'name': 'cticket',
          'path': '/',
          'sameSite': 'None',
          'secure': True,
-         'value': '275F2106E6E6CAAA34E1A32FE2452F42450E99443E2B22A31360D38C0BB2DEB3'}
+         'value': '275F2106E6E6CAAA34E1A32FE2452F42450E99443E2B22A31360D38C0BB2DEB3'
+         }
         """
         return self.browser.get_cookie(name=name) or dict()
 
     def refresh(self) -> None:
         # 刷新当前页面
         self.browser.refresh()
+
+    def enter_date_by_date_component(self, locator: str, regx: str, date_value: str):
+        year = date_value[:4]
+        month = date_value[5:7]
+        date = date_value[8:10]
+        # 点击输入文本框，弹出日历控件
+        self.submit_click(locator=locator, regx=regx)
+        time.sleep(0.5)
+        # 弹出选择年下拉选项
+        select_year_regx = "select-year"
+        # 选择指定年
+        select_year = Select(self.browser.find_element(Locator.get("class_name"), select_year_regx))
+        select_year.select_by_visible_text("{}年".format(year))
+        time.sleep(0.5)
+        # 选择指定月
+        select_month_regx = "select-month"
+        select_year = Select(self.browser.find_element(Locator.get("class_name"), select_month_regx))
+        select_year.select_by_visible_text("{}月".format(int(month)))
+        time.sleep(0.5)
+        # 指定日期
+        select_date_regx = '//td[@data-year="{}" and @data-month="{}"]/a[text()="{}"]'.format(
+            year, int(month), int(date)
+        )
+        # 定位到日历中的日期元素
+        self.submit_click(locator="xpath", regx=select_date_regx)
+        time.sleep(0.5)
 
 
 @element_find_exception
