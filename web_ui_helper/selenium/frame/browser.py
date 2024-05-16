@@ -614,9 +614,7 @@ class SeleniumProxy(object):
         select_year.select_by_visible_text("{}月".format(int(month)))
         time.sleep(0.5)
         # 指定日期
-        select_date_regx = '//td[@data-year="{}" and @data-month="{}"]/a[text()="{}"]'.format(
-            year, int(month), int(date)
-        )
+        select_date_regx = './/a[text()="{}"]'.format(int(date))
         # 定位到日历中的日期元素
         self.submit_click(locator="xpath", regx=select_date_regx)
         time.sleep(0.5)
