@@ -295,7 +295,10 @@ class SeleniumProxy(object):
             input_1.send_keys('{}'.format(value))
             flag = True
         except Exception as e:
-            err_str = "通过选择器：{}，表达式: {}，捕获输入框设置文本<{}>失败，error：{}".format(locator, regx, value, e)
+            err_str = "通过选择器：{}，表达式: {}，捕获输入框设置文本<{}>失败".format(locator, regx, value)
+            e_slice = str(e).split("Stacktrace")
+            if e_slice[0]:
+                err_str = err_str + "，error: {}".format(e_slice[0])
             logger.error(err_str)
         return flag
 
@@ -313,7 +316,10 @@ class SeleniumProxy(object):
             submit.click()
             flag = True
         except Exception as e:
-            err_str = "通过选择器：{}，表达式: {}，捕获点击对象并点击失败，error：{}".format(locator, regx, e)
+            err_str = "通过选择器：{}，表达式: {}，捕获点击对象并点击失败".format(locator, regx)
+            e_slice = str(e).split("Stacktrace")
+            if e_slice[0]:
+                err_str = err_str + "，error: {}".format(e_slice[0])
             logger.error(err_str)
         return flag
 
@@ -354,7 +360,10 @@ class SeleniumProxy(object):
             logger.warning("获取元素的文字信息为: {}".format(element_text))
             return element_text
         except Exception as e:
-            err_str = "通过选择器：{}，表达式: {}，获取元素文本信息失败，error：{}".format(locator, regx, e)
+            err_str = "通过选择器：{}，表达式: {}，获取元素文本信息失败".format(locator, regx)
+            e_slice = str(e).split("Stacktrace")
+            if e_slice[0]:
+                err_str = err_str + "，error: {}".format(e_slice[0])
             logger.error(err_str)
         return element_text
 
@@ -367,7 +376,10 @@ class SeleniumProxy(object):
             err_str = "通过选择器：{}，表达式: {}，没有找到对应的元素".format(locator, regx)
             logger.warning(err_str)
         except Exception as e:
-            err_str = "通过选择器：{}，表达式: {}，获取元素失败，error：{}".format(locator, regx, e)
+            err_str = "通过选择器：{}，表达式: {}，获取元素失败".format(locator, regx)
+            e_slice = str(e).split("Stacktrace")
+            if e_slice[0]:
+                err_str = err_str + "，error: {}".format(e_slice[0])
             logger.error(err_str)
         return element
 
@@ -380,7 +392,10 @@ class SeleniumProxy(object):
             err_str = "通过选择器：{}，表达式: {}，没有找到对应的元素".format(locator, regx)
             logger.warning(err_str)
         except Exception as e:
-            err_str = "通过选择器：{}，表达式: {}，获取元素失败，error：{}".format(locator, regx, e)
+            err_str = "通过选择器：{}，表达式: {}，获取元素失败".format(locator, regx)
+            e_slice = str(e).split("Stacktrace")
+            if e_slice[0]:
+                err_str = err_str + "，error: {}".format(e_slice[0])
             logger.error(err_str)
         return elements
 
@@ -445,7 +460,10 @@ class SeleniumProxy(object):
         except (NoSuchElementException,):
             pass
         except Exception as e:
-            err_str = "通过选择器：{}，表达式: {}，获取元素失败，error：{}".format(locator, regx, e)
+            err_str = "通过选择器：{}，表达式: {}，判断元素是否存在失败".format(locator, regx)
+            e_slice = str(e).split("Stacktrace")
+            if e_slice[0]:
+                err_str = err_str + "，error: {}".format(e_slice[0])
             logger.error(err_str)
         return is_exist
 
