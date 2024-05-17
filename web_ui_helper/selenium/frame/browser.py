@@ -123,7 +123,8 @@ class ChromeBrowser(Browser):
             # 谷歌浏览器后台运行模式
             chrome_options.add_argument('--headless')
             # 指定浏览器分辨率
-            chrome_options.add_argument('--window-size=1920,1080')
+            # chrome_options.add_argument('--window-size=1920,1080')
+            chrome_options.add_argument('--window-size=2560,1440')
         else:
             # 浏览器最大化
             chrome_options.add_argument('--start-maximized')
