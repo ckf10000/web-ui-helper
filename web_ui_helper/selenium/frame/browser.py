@@ -638,6 +638,12 @@ class SeleniumProxy(object):
         self.submit_click(locator="xpath", regx=select_date_regx)
         time.sleep(0.5)
 
+    def exception_html_save_to_txt(self):
+        su = get_current_datetime_int_str()
+        with open(os.path.join(get_project_path(), self.browser.LOG_PATH, "exception_{}.txt".format(su)), "w",
+                  encoding="utf-8") as file:
+            file.write(self.get_page_source())
+
 
 @element_find_exception
 def scroll_to_bottom(driver: webdriver) -> None:
