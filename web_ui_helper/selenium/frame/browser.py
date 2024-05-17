@@ -640,7 +640,8 @@ class SeleniumProxy(object):
 
     def exception_html_save_to_txt(self):
         su = get_current_datetime_int_str()
-        with open(os.path.join(self.browser.LOG_PATH, "exception_{}.txt".format(su)), "w", encoding="utf-8") as file:
+        file_name = os.path.join(self.browser_proxy.LOG_PATH, "exception_{}.html".format(su))
+        with open(file_name, "w", encoding="utf-8") as file:
             file.write(self.get_page_source())
 
 
