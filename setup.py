@@ -29,7 +29,8 @@ setup(
         'requests>=2.31.0',
         'selenium-wire>=5.1.0',
         'webdriver-manager>=4.0.1',
-        'ddddocr>=1.4.11'
+        'ddddocr>=1.4.11',
+        'openpyxl>=3.1.2'
     ],
     classifiers=[
         'Programming Language :: Python :: 3',
