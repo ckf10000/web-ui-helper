@@ -666,9 +666,23 @@ def get_elements(driver: webdriver, locator: str, regx: str, timeout: int = 3, *
 
 
 @loop_find_element
+def get_element(driver: webdriver, locator: str, regx: str, timeout: int = 3, **kwargs) -> WebElement:
+    kwargs.clear()
+    return WebDriverWait(driver, timeout).until(
+        ec.presence_of_element_located((Locator.get(locator), regx))
+    )
+
+
+@loop_find_element
 def get_sub_element(element: WebElement, locator: str, regx: str, **kwargs) -> WebElement:
     kwargs.clear()
     return element.find_element(Locator.get(locator), regx)
+
+
+@loop_find_element
+def get_sub_elements(element: WebElement, locator: str, regx: str, **kwargs) -> [WebElement]:
+    kwargs.clear()
+    return element.find_elements(Locator.get(locator), regx)
 
 
 @loop_find_element
