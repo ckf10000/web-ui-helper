@@ -13,7 +13,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='web-ui-helper',
-    version='1.0.1',
+    version='1.0.2',
     description='This is my web ui helper package',
     long_description='This is my web ui helper package',
     author='ckf10000',

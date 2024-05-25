@@ -59,7 +59,9 @@ def test_selenium_get_list():
 
 
 def test_selenium_get_expand_list():
-    sel = SeleniumProxy(browser_name="Chrome", is_headless=True, proxy_address="", is_single_instance=False)
+    sel = SeleniumProxy(
+        browser_name="Chrome", is_headless=False, is_enable_proxy=False, is_single_instance=False, proxy_scheme="https"
+    )
     url = "https://flights.ctrip.com/online/list/oneway-SZX-TSN?_=1&depdate=2024-05-31&sortByPrice=true"
     parse_data = ListFrame.get_all_elements_with_scroll_expand(
         driver=sel.browser, url=url, index_locator=Air.var_index.value.get("locator"), list_key="index",
@@ -70,7 +72,6 @@ def test_selenium_get_expand_list():
         more_all_locator=Air.more_product.value.get("locator"), more_all_regx=Air.more_product.value.get("regx"),
         area_parse_func=DesktopFlight.parse_expand_area
     )
-    from pprint import pprint
     if parse_data.get("rows_data"):
         df = DataFrame.from_records(data=parse_data.get("rows_data"))
         df.to_excel('SZX-TSN航线.xlsx', index=False)

@@ -11,7 +11,9 @@
 """
 import os
 import time
+import string
 import base64
+import zipfile
 import ddddocr
 import requests
 import selenium
@@ -38,10 +40,12 @@ from selenium.webdriver.firefox.options import Options as FirefoxOptions
 
 from web_ui_helper.common.log import logger
 from web_ui_helper.common.webdriver import Locator
+from web_ui_helper.common.http_proxy import get_proxy_address
 from web_ui_helper.common.date_extend import get_current_datetime_int_str
 from web_ui_helper.decorators.selenium_exception import element_find_exception, loop_find_element
 from web_ui_helper.common.dir import get_project_path, get_chrome_default_user_data_path, get_var_path, is_file, \
-    get_browser_bin_exe, create_directory, move_file, is_dir, get_browser_process_name, is_process_running
+    get_browser_bin_exe, create_directory, move_file, is_dir, get_browser_process_name, is_process_running, \
+    join_path
 
 
 class Browser(object):
@@ -56,10 +60,15 @@ class Browser(object):
     IMAGE_PATH = os.path.join(get_project_path(), "image")
     create_directory(IMAGE_PATH)
 
-    def __init__(self, browser_path: str, is_headless: bool, proxy_address: str) -> None:
+    def __init__(self, browser_path: str, is_headless: bool = True, proxy_address: str = '', proxy_username: str = '',
+                 proxy_password: str = '', proxy_scheme: str = "http", is_enable_proxy: bool = False) -> None:
         self.browser_path = browser_path
         self.is_headless = is_headless
         self.proxy_address = proxy_address
+        self.is_enable_proxy = is_enable_proxy
+        self.proxy_scheme = proxy_scheme
+        self.proxy_username = proxy_username
+        self.proxy_password = proxy_password
 
     @abstractmethod
     def get_browser(self):
@@ -81,8 +90,10 @@ class Browser(object):
 class ChromeBrowser(Browser):
     BROWSER_NAME = "Chrome"
 
-    def __init__(self, browser_path: str, is_headless: bool, proxy_address: str) -> None:
-        super().__init__(browser_path, is_headless, proxy_address)
+    def __init__(self, browser_path: str, is_headless: bool = True, proxy_address: str = "", proxy_username: str = "",
+                 proxy_password: str = "", proxy_scheme: str = "http", is_enable_proxy: bool = False) -> None:
+        super().__init__(browser_path, is_headless, proxy_address, proxy_username, proxy_password, proxy_scheme,
+                         is_enable_proxy)
         self.driver_file = os.path.join(self.BIN_PATH, "chromedriver.exe")
         if is_file(self.driver_file) is False:
             logger.warning("开始下载与浏览器版本匹配的chromedriver.exe文件.")
@@ -139,10 +150,19 @@ class ChromeBrowser(Browser):
         logger.warning("当前系统Chrome浏览器可运行程序的路径为：{}".format(self.browser_path))
         chrome_options.binary_location = self.browser_path
         # 添加代理设置到 Chrome 选项
+        if self.is_enable_proxy is True:
+            if not self.proxy_address:
+                ip_addr = get_proxy_address()
+                if ip_addr:
+                    self.proxy_address = ip_addr
+            if self.proxy_address:
+                # chrome_options.add_argument('--proxy-server=http://{}'.format(self.proxy_address))
+                # chrome_options.add_argument('--proxy-server=https://{}'.format(self.proxy_address))
+                proxy_plugin_path = self.__create_proxy_extension()
+                proxy_plugin_path = proxy_plugin_path if isinstance(proxy_plugin_path, str) else str(proxy_plugin_path)
+                chrome_options.add_extension(proxy_plugin_path)
+                logger.warning("{}代理插件添加完成".format(self.BROWSER_NAME))
         logger.warning("使用代理地址：{}".format(self.proxy_address or "null"))
-        if self.proxy_address:
-            chrome_options.add_argument('--proxy-server=http://{}'.format(self.proxy_address))
-            chrome_options.add_argument('--proxy-server=https://{}'.format(self.proxy_address))
         pre = dict()
         # 设置这两个参数就可以避免密码提示框的弹出
         pre["credentials_enable_service"] = False
@@ -190,12 +210,89 @@ class ChromeBrowser(Browser):
         process_name = get_browser_process_name(self.BROWSER_NAME)
         return is_process_running(process_name=process_name)
 
+    def __create_proxy_extension(self):
+        """Proxy Auth Extension
+        args:
+            proxy_host (str): domain or ip address, ie proxy.domain.com
+            proxy_port (int): port
+            proxy_username (str): auth username
+            proxy_password (str): auth password
+        kwargs:
+            scheme (str): proxy scheme, default http
+            plugin_path (str): absolute path of the extension
+        return str -> plugin_path
+        """
+        proxy_address_slice = self.proxy_address.split(":")
+        plugin_path = join_path([get_project_path(), 'bin', 'Selenium-Chrome-HTTP-Private-Proxy.zip'])
+        manifest_json = """
+        {
+            "version": "1.0.0",
+            "manifest_version": 2,
+            "name": "Chrome Proxy",
+            "permissions": [
+                "proxy",
+                "tabs",
+                "unlimitedStorage",
+                "storage",
+                "<all_urls>",
+                "webRequest",
+                "webRequestBlocking"
+            ],
+            "background": {
+                "scripts": ["background.js"]
+            },
+            "minimum_chrome_version":"22.0.0"
+        }
+        """
+        background_js = string.Template(
+            """
+            var config = {
+                    mode: "fixed_servers",
+                    rules: {
+                      singleProxy: {
+                        scheme: "${scheme}",
+                        host: "${host}",
+                        port: parseInt(${port})
+                      },
+                      bypassList: ["foobar.com"]
+                    }
+                  };
+            chrome.proxy.settings.set({value: config, scope: "regular"}, function() {});
+            function callbackFn(details) {
+                return {
+                    authCredentials: {
+                        username: "${username}",
+                        password: "${password}"
+                    }
+                };
+            }
+            chrome.webRequest.onAuthRequired.addListener(
+                        callbackFn,
+                        {urls: ["<all_urls>"]},
+                        ['blocking']
+            );
+            """
+        ).substitute(
+            host=proxy_address_slice[0],
+            port=proxy_address_slice[1],
+            username=self.proxy_username,
+            password=self.proxy_password,
+            scheme=self.proxy_scheme,
+        )
+        with zipfile.ZipFile(plugin_path if isinstance(plugin_path, str) else str(plugin_path), 'w') as zp:
+            zp.writestr("manifest.json", manifest_json)
+            zp.writestr("background.js", background_js)
+
+        return plugin_path
+
 
 class FirefoxBrowser(Browser):
     BROWSER_NAME = "Firefox"
 
-    def __init__(self, browser_path: str, is_headless: bool, proxy_address: str) -> None:
-        super().__init__(browser_path, is_headless, proxy_address)
+    def __init__(self, browser_path: str, is_headless: bool = True, proxy_address: str = "", proxy_username: str = "",
+                 proxy_password: str = "", proxy_scheme: str = "http", is_enable_proxy: bool = False) -> None:
+        super().__init__(browser_path, is_headless, proxy_address, proxy_username, proxy_password, proxy_scheme,
+                         is_enable_proxy)
 
     def get_options(self) -> FirefoxOptions:
         firefox_profile = FirefoxOptions()
@@ -242,8 +339,9 @@ class FirefoxBrowser(Browser):
 
 class SeleniumProxy(object):
 
-    def __init__(self, browser_name: str, proxy_address: str, browser_path: str = None,
-                 is_headless: bool = False, is_single_instance: bool = True) -> None:
+    def __init__(self, browser_name: str, proxy_address: str = "", proxy_username: str = "",
+                 proxy_scheme: str = "http", proxy_password: str = "", is_enable_proxy: bool = False,
+                 browser_path: str = None, is_headless: bool = True, is_single_instance: bool = True) -> None:
         if browser_path:
             if not is_file(browser_path):
                 raise ValueError("browser path is not exist")
@@ -254,16 +352,20 @@ class SeleniumProxy(object):
         exe_name = get_browser_bin_exe(browser_name=browser_name)
         exe_file = os.path.join(browser_path, exe_name)
         if browser_name == "Chrome":
-            self.browser_proxy = ChromeBrowser(browser_path=exe_file, is_headless=is_headless,
-                                               proxy_address=proxy_address)
+            self.browser_proxy = ChromeBrowser(
+                browser_path=exe_file, is_headless=is_headless, proxy_address=proxy_address, proxy_scheme=proxy_scheme,
+                is_enable_proxy=is_enable_proxy, proxy_username=proxy_username, proxy_password=proxy_password
+            )
             # 单实例模式下，系统只能有一个chrome浏览器进程在运行中
             if is_single_instance is True:
                 if self.browser_proxy.is_running() is True:
                     raise ValueError("Chrome browser is already running.")
             self.browser, self.wait, self.browser_name = self.browser_proxy.get_browser()
         elif browser_name == "Firefox":
-            self.browser_proxy = FirefoxBrowser(browser_path=exe_file, is_headless=is_headless,
-                                                proxy_address=proxy_address)
+            self.browser_proxy = FirefoxBrowser(
+                browser_path=exe_file, is_headless=is_headless, proxy_address=proxy_address, proxy_scheme=proxy_scheme,
+                proxy_password=proxy_password, is_enable_proxy=is_enable_proxy, proxy_username=proxy_username,
+            )
             # 单实例模式下，系统只能有一个firefox浏览器进程在运行中
             if is_single_instance is True:
                 if self.browser_proxy.is_running() is True:
