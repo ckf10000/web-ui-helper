@@ -164,5 +164,7 @@ cython_debug/
 *.csv*
 *.db*
 *.pyc*
+*.xlsx
+*.zip
 /profile/
 /bin/chromedriver.exe
