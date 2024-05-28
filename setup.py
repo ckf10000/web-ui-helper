@@ -13,7 +13,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='web-ui-helper',
-    version='1.0.2',
+    version='1.0.3',
     description='This is my web ui helper package',
     long_description='This is my web ui helper package',
     author='ckf10000',
@@ -23,7 +23,7 @@ setup(
     install_requires=[
         'selenium>=4.20.0',
         'pandas>=2.2.2',
-        'blinker>=1.7.0',
+        'blinker==1.7.0',
         'airtest>=1.3.3',
         'pocoui>=1.0.94',
         'requests>=2.31.0',

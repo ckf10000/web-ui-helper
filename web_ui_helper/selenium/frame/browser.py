@@ -11,6 +11,7 @@
 """
 import os
 import time
+import json
 import string
 import base64
 import zipfile
@@ -19,6 +20,7 @@ import requests
 import selenium
 from PIL import Image
 from io import BytesIO
+from copy import deepcopy
 from selenium import webdriver
 from abc import abstractmethod
 from selenium.webdriver import ActionChains
@@ -61,7 +63,8 @@ class Browser(object):
     create_directory(IMAGE_PATH)
 
     def __init__(self, browser_path: str, is_headless: bool = True, proxy_address: str = '', proxy_username: str = '',
-                 proxy_password: str = '', proxy_scheme: str = "http", is_enable_proxy: bool = False) -> None:
+                 proxy_password: str = '', proxy_scheme: str = "http", is_enable_proxy: bool = False,
+                 enable_cdp: bool = False) -> None:
         self.browser_path = browser_path
         self.is_headless = is_headless
         self.proxy_address = proxy_address
@@ -69,6 +72,7 @@ class Browser(object):
         self.proxy_scheme = proxy_scheme
         self.proxy_username = proxy_username
         self.proxy_password = proxy_password
+        self.enable_cdp = enable_cdp
 
     @abstractmethod
     def get_browser(self):
@@ -91,9 +95,10 @@ class ChromeBrowser(Browser):
     BROWSER_NAME = "Chrome"
 
     def __init__(self, browser_path: str, is_headless: bool = True, proxy_address: str = "", proxy_username: str = "",
-                 proxy_password: str = "", proxy_scheme: str = "http", is_enable_proxy: bool = False) -> None:
+                 proxy_password: str = "", proxy_scheme: str = "http", is_enable_proxy: bool = False,
+                 enable_cdp: bool = False) -> None:
         super().__init__(browser_path, is_headless, proxy_address, proxy_username, proxy_password, proxy_scheme,
-                         is_enable_proxy)
+                         is_enable_proxy, enable_cdp)
         self.driver_file = os.path.join(self.BIN_PATH, "chromedriver.exe")
         if is_file(self.driver_file) is False:
             logger.warning("开始下载与浏览器版本匹配的chromedriver.exe文件.")
@@ -139,6 +144,8 @@ class ChromeBrowser(Browser):
         else:
             # 浏览器最大化
             chrome_options.add_argument('--start-maximized')
+        if self.enable_cdp is True:
+            chrome_options.add_argument('--auto-open-devtools-for-tabs')
         chrome_options.add_argument('--disable-dev-shm-usage')
         # 或者使用下面的设置, 提升速度
         # chrome_options.add_argument('blink-settings=imagesEnabled=false')
@@ -203,6 +210,9 @@ class ChromeBrowser(Browser):
         browser.execute_cdp_cmd('Page.addScriptToEvaluateOnNewDocument', {
             'source': 'Object.defineProperty(navigator, "webdriver", {get: () => undefined})',
         })
+        if self.enable_cdp is True:
+            # 启用 DevTools 并启用网络日志
+            browser.execute_cdp_cmd('Network.enable', {})
         wait = WebDriverWait(driver=browser, timeout=self.TIMEOUT)
         return browser, wait, self.BROWSER_NAME
 
@@ -290,9 +300,10 @@ class FirefoxBrowser(Browser):
     BROWSER_NAME = "Firefox"
 
     def __init__(self, browser_path: str, is_headless: bool = True, proxy_address: str = "", proxy_username: str = "",
-                 proxy_password: str = "", proxy_scheme: str = "http", is_enable_proxy: bool = False) -> None:
+                 proxy_password: str = "", proxy_scheme: str = "http", is_enable_proxy: bool = False,
+                 enable_cdp: bool = False) -> None:
         super().__init__(browser_path, is_headless, proxy_address, proxy_username, proxy_password, proxy_scheme,
-                         is_enable_proxy)
+                         is_enable_proxy, enable_cdp)
 
     def get_options(self) -> FirefoxOptions:
         firefox_profile = FirefoxOptions()
@@ -339,7 +350,7 @@ class FirefoxBrowser(Browser):
 
 class SeleniumProxy(object):
 
-    def __init__(self, browser_name: str, proxy_address: str = "", proxy_username: str = "",
+    def __init__(self, browser_name: str, proxy_address: str = "", proxy_username: str = "", enable_cdp: bool = False,
                  proxy_scheme: str = "http", proxy_password: str = "", is_enable_proxy: bool = False,
                  browser_path: str = None, is_headless: bool = True, is_single_instance: bool = True) -> None:
         if browser_path:
@@ -354,7 +365,8 @@ class SeleniumProxy(object):
         if browser_name == "Chrome":
             self.browser_proxy = ChromeBrowser(
                 browser_path=exe_file, is_headless=is_headless, proxy_address=proxy_address, proxy_scheme=proxy_scheme,
-                is_enable_proxy=is_enable_proxy, proxy_username=proxy_username, proxy_password=proxy_password
+                is_enable_proxy=is_enable_proxy, proxy_username=proxy_username, proxy_password=proxy_password,
+                enable_cdp=enable_cdp
             )
             # 单实例模式下，系统只能有一个chrome浏览器进程在运行中
             if is_single_instance is True:
@@ -365,6 +377,7 @@ class SeleniumProxy(object):
             self.browser_proxy = FirefoxBrowser(
                 browser_path=exe_file, is_headless=is_headless, proxy_address=proxy_address, proxy_scheme=proxy_scheme,
                 proxy_password=proxy_password, is_enable_proxy=is_enable_proxy, proxy_username=proxy_username,
+                enable_cdp=enable_cdp
             )
             # 单实例模式下，系统只能有一个firefox浏览器进程在运行中
             if is_single_instance is True:
@@ -745,6 +758,52 @@ class SeleniumProxy(object):
         file_name = os.path.join(self.browser_proxy.LOG_PATH, "exception_{}.html".format(su))
         with open(file_name, "w", encoding="utf-8") as file:
             file.write(self.get_page_source())
+
+    def get_network_requests(self, target_urls: list) -> dict:
+        # 获取所有性能日志
+        logs = self.browser.get_log('performance')
+        network_requests = dict()
+        req_urls_local = deepcopy(target_urls)
+        rep_urls_local = deepcopy(target_urls)
+        for entry in logs:
+            log = json.loads(entry['message'])['message']
+            if rep_urls_local:
+                if log['method'] == 'Network.responseReceived':
+                    response = log['params']['response']
+                    url = response.get('url')
+                    if "?" in url:
+                        url = url.split("?")[0]
+                    if url in rep_urls_local:
+                        response_info = {
+                            'url': response['url'],
+                            'status': response['status'],
+                            'statusText': response['statusText'],
+                            'headers': response['headers'],
+                            'mimeType': response['mimeType']
+                        }
+                        info_local = network_requests.get("url") or dict()
+                        info_local["response_info"] = response_info
+                        network_requests[url] = info_local
+                        rep_urls_local.remove(url)
+            if req_urls_local:
+                if log['method'] == 'Network.requestWillBeSent':
+                    request = log['params']['request']
+                    url = request.get('url')
+                    if "?" in url:
+                        url = url.split("?")[0]
+                    if url in req_urls_local:
+                        request_info = {
+                            'url': request['url'],
+                            'status': request['status'],
+                            'statusText': request['statusText'],
+                            'headers': request['headers'],
+                            'mimeType': request['mimeType']
+                        }
+                        info_local = network_requests.get("url") or dict()
+                        info_local["request_info"] = request_info
+                        network_requests[url] = info_local
+                        req_urls_local.remove(url)
+        return network_requests
 
 
 @element_find_exception

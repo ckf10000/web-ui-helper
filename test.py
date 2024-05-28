@@ -46,7 +46,7 @@ def test_adb():
 
 
 def test_selenium_get_list():
-    sel = SeleniumProxy(browser_name="Chrome", is_headless=True, proxy_address="", is_single_instance=False)
+    sel = SeleniumProxy(browser_name="Chrome", is_headless=False, proxy_address="", is_single_instance=False)
     url = "https://flights.ctrip.com/online/list/oneway-SZX-TSN?_=1&depdate=2024-05-31&sortByPrice=true"
     elements_data = ListFrame.get_all_elements_with_scroll_tile(
         driver=sel.browser, url=url, locator="xpath", list_key="index", regx="//div[@index]", timeout=3,
