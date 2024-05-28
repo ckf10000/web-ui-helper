@@ -200,7 +200,7 @@ class ChromeBrowser(Browser):
     def get_browser(self) -> tuple:
         service = self.get_service()
         options = self.get_options()
-        browser = Chrome(service=service, options=options)
+        browser = driver_wire.Chrome(service=service, options=options)
         logger.warning("Selenium 版本: {}".format(selenium.__version__))
         logger.warning("浏览器版本: {}".format(browser.capabilities['browserVersion']))
         # 设置隐式等待时间为3秒
