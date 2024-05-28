@@ -760,49 +760,54 @@ class SeleniumProxy(object):
             file.write(self.get_page_source())
 
     def get_network_requests(self, target_urls: list) -> dict:
-        # 获取所有性能日志
-        logs = self.browser.get_log('performance')
         network_requests = dict()
-        req_urls_local = deepcopy(target_urls)
-        rep_urls_local = deepcopy(target_urls)
-        for entry in logs:
-            log = json.loads(entry['message'])['message']
-            if rep_urls_local:
-                if log['method'] == 'Network.responseReceived':
-                    response = log['params']['response']
-                    url = response.get('url')
-                    if "?" in url:
-                        url = url.split("?")[0]
-                    if url in rep_urls_local:
-                        response_info = {
-                            'url': response['url'],
-                            'status': response['status'],
-                            'statusText': response['statusText'],
-                            'headers': response['headers'],
-                            'mimeType': response['mimeType']
-                        }
-                        info_local = network_requests.get("url") or dict()
-                        info_local["response_info"] = response_info
-                        network_requests[url] = info_local
-                        rep_urls_local.remove(url)
-            if req_urls_local:
-                if log['method'] == 'Network.requestWillBeSent':
-                    request = log['params']['request']
-                    url = request.get('url')
-                    if "?" in url:
-                        url = url.split("?")[0]
-                    if url in req_urls_local:
-                        request_info = {
-                            'url': request['url'],
-                            'status': request['status'],
-                            'statusText': request['statusText'],
-                            'headers': request['headers'],
-                            'mimeType': request['mimeType']
-                        }
-                        info_local = network_requests.get("url") or dict()
-                        info_local["request_info"] = request_info
-                        network_requests[url] = info_local
-                        req_urls_local.remove(url)
+        try:
+            # 获取所有性能日志
+            logs = self.browser.get_log('performance')
+            req_urls_local = deepcopy(target_urls)
+            rep_urls_local = deepcopy(target_urls)
+            for entry in logs:
+                log = json.loads(entry['message'])['message']
+                if rep_urls_local:
+                    if log['method'] == 'Network.responseReceived':
+                        response = log['params']['response']
+                        url = response.get('url')
+                        if "?" in url:
+                            url = url.split("?")[0]
+                        if url in rep_urls_local:
+                            response_info = {
+                                'url': response['url'],
+                                'status': response['status'],
+                                'statusText': response['statusText'],
+                                'headers': response['headers'],
+                                'mimeType': response['mimeType']
+                            }
+                            info_local = network_requests.get("url") or dict()
+                            info_local["response_info"] = response_info
+                            network_requests[url] = info_local
+                            rep_urls_local.remove(url)
+                if req_urls_local:
+                    if log['method'] == 'Network.requestWillBeSent':
+                        request = log['params']['request']
+                        url = request.get('url')
+                        if "?" in url:
+                            url = url.split("?")[0]
+                        if url in req_urls_local:
+                            request_info = {
+                                'url': request['url'],
+                                'status': request['status'],
+                                'statusText': request['statusText'],
+                                'headers': request['headers'],
+                                'mimeType': request['mimeType']
+                            }
+                            info_local = network_requests.get("url") or dict()
+                            info_local["request_info"] = request_info
+                            network_requests[url] = info_local
+                            req_urls_local.remove(url)
+        except Exception as e:
+            if "Stacktrace:" in str(e):
+                e = str(e).split("Stacktrace:")[0]
+            logger.error(e)
         return network_requests
 
 
