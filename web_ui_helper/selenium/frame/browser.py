@@ -782,10 +782,14 @@ class SeleniumProxy(object):
                 if url in rep_urls_local:
                     if request.response:
                         response = request.response
+                        try:
+                            response_body = response.body.decode('utf-8', errors='ignore')  # 解码响应体
+                        except UnicodeDecodeError:
+                            response_body = response.body.decode('latin-1', errors='ignore')  # 尝试其他解码方式
                         response_info = {
                             'status_code': response.status_code,
                             'headers': response.headers,
-                            'body': response.body.decode('utf-8', errors='replace')  # 解码响应体
+                            'body': response_body
                         }
                         network_requests[url] = response_info
                         rep_urls_local.remove(url)
