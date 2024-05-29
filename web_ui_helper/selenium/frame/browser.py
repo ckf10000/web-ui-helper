@@ -22,6 +22,7 @@ from io import BytesIO
 from copy import deepcopy
 from selenium import webdriver
 from abc import abstractmethod
+from collections import OrderedDict
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import Select
@@ -33,7 +34,7 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.common.exceptions import NoSuchElementException
 # expected_conditions 类负责条件
 from selenium.webdriver.support import expected_conditions as ec
-from selenium.webdriver.chrome.webdriver import WebDriver as Chrome
+# from selenium.webdriver.chrome.webdriver import WebDriver as Chrome
 from selenium.webdriver.firefox.webdriver import WebDriver as Firefox
 from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.firefox.service import Service as FirefoxService
@@ -791,7 +792,9 @@ class SeleniumProxy(object):
                             'headers': response.headers,
                             'body': response_body
                         }
-                        network_requests[url] = response_info
+                        network_requests[url] = dict(
+                            request_info=dict(headers=OrderedDict(request.headers)), response_info=response_info
+                        )
                         rep_urls_local.remove(url)
         except Exception as e:
             if "Stacktrace:" in str(e):
