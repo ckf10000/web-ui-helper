@@ -387,6 +387,9 @@ class SeleniumProxy(object):
         else:
             raise ValueError("Browser name must be Chrome or Firefox.")
 
+    def new_instance(self) -> None:
+        self.browser, self.wait, self.browser_name = self.browser_proxy.get_browser()
+
     def input_text(self, locator: str, regx: str, value: str) -> bool:
         """
         locator 选择器

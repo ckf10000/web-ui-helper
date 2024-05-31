@@ -60,7 +60,7 @@ def test_selenium_get_list():
 
 def test_selenium_get_expand_list():
     sel = SeleniumProxy(
-        browser_name="Chrome", is_headless=False, is_enable_proxy=False, is_single_instance=False, proxy_scheme="https"
+        browser_name="Chrome", is_headless=True, is_enable_proxy=False, is_single_instance=False, proxy_scheme="https"
     )
     url = "https://flights.ctrip.com/online/list/oneway-SZX-TSN?_=1&depdate=2024-05-31&sortByPrice=true"
     parse_data = ListFrame.get_all_elements_with_scroll_expand(
